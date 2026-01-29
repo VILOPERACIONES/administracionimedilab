@@ -1,6 +1,6 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FlaskConical, Package, TrendingUp, Users } from "lucide-react";
+import { FlaskConical, Package } from "lucide-react";
 
 const stats = [
   {
@@ -14,18 +14,6 @@ const stats = [
     value: "12",
     icon: Package,
     description: "Paquetes disponibles",
-  },
-  {
-    title: "Clientes",
-    value: "1,234",
-    icon: Users,
-    description: "Este mes",
-  },
-  {
-    title: "Crecimiento",
-    value: "+15%",
-    icon: TrendingUp,
-    description: "vs. mes anterior",
   },
 ];
 
