@@ -24,9 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search, Package, Check, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Check, X, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Paquete {
   id: number;
@@ -36,7 +37,7 @@ interface Paquete {
   incluye: string[];
 }
 
-const categorias = [
+const categoriasIniciales = [
   "Chequeos Generales",
   "Cardiología",
   "Ginecología",
@@ -77,6 +78,7 @@ const initialPaquetes: Paquete[] = [
 
 const Paquetes = () => {
   const [paquetes, setPaquetes] = useState<Paquete[]>(initialPaquetes);
+  const [categorias, setCategorias] = useState<string[]>(categoriasIniciales);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPaquete, setEditingPaquete] = useState<Paquete | null>(null);
@@ -87,6 +89,18 @@ const Paquetes = () => {
     incluye: [] as string[],
   });
   const [newItem, setNewItem] = useState("");
+  const [newCategoria, setNewCategoria] = useState("");
+  const [isAddingCategoria, setIsAddingCategoria] = useState(false);
+
+  const handleAddCategoria = () => {
+    if (newCategoria.trim() && !categorias.includes(newCategoria.trim())) {
+      setCategorias([...categorias, newCategoria.trim()]);
+      setFormData({ ...formData, categoria: newCategoria.trim() });
+      setNewCategoria("");
+      setIsAddingCategoria(false);
+      toast.success("Categoría añadida");
+    }
+  };
 
   const filteredPaquetes = paquetes.filter(
     (p) =>
@@ -225,23 +239,64 @@ const Paquetes = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Categoría</Label>
-                    <Select
-                      value={formData.categoria}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, categoria: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categorias.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
+                    <Popover open={isAddingCategoria} onOpenChange={setIsAddingCategoria}>
+                      <Select
+                        value={formData.categoria}
+                        onValueChange={(value) => {
+                          if (value === "__add_new__") {
+                            setIsAddingCategoria(true);
+                          } else {
+                            setFormData({ ...formData, categoria: value });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categorias.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="__add_new__" className="text-primary">
+                            <div className="flex items-center gap-2">
+                              <PlusCircle className="h-4 w-4" />
+                              Añadir nueva categoría
+                            </div>
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        </SelectContent>
+                      </Select>
+                      <PopoverTrigger asChild>
+                        <span className="hidden" />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80" align="start">
+                        <div className="space-y-3">
+                          <Label>Nueva Categoría</Label>
+                          <Input
+                            placeholder="Nombre de la categoría"
+                            value={newCategoria}
+                            onChange={(e) => setNewCategoria(e.target.value)}
+                            onKeyPress={(e) => e.key === "Enter" && handleAddCategoria()}
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setIsAddingCategoria(false);
+                                setNewCategoria("");
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button size="sm" onClick={handleAddCategoria}>
+                              Añadir
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="precio">Precio (MXN)</Label>
