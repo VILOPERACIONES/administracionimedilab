@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
 import logo from "@/assets/imedilab-logo.png";
@@ -16,12 +16,11 @@ const loginSchema = z.object({
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, signIn, signUp, loading: authLoading } = useAuth();
+  const { user, signIn, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Redirect if already authenticated
@@ -45,30 +44,12 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      if (isSignUp) {
-        const { error } = await signUp(email, password);
-        if (error) {
-          if (error.message.includes("already registered")) {
-            setError("Este email ya está registrado");
-          } else {
-            setError(error.message);
-          }
+      const { error } = await signIn(email, password);
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          setError("Credenciales inválidas");
         } else {
-          setError(null);
-          // Show success message for signup
-          setIsSignUp(false);
-          setEmail("");
-          setPassword("");
-          alert("Cuenta creada. Por favor revisa tu email para confirmar tu cuenta.");
-        }
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            setError("Credenciales inválidas");
-          } else {
-            setError(error.message);
-          }
+          setError(error.message);
         }
       }
     } finally {
@@ -101,10 +82,10 @@ const Login = () => {
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-semibold">
-              {isSignUp ? "Crear Cuenta" : "Iniciar Sesión"}
+              Iniciar Sesión
             </CardTitle>
             <CardDescription>
-              {isSignUp ? "Registra una nueva cuenta de administrador" : "Ingresa tus credenciales para acceder"}
+              Ingresa tus credenciales para acceder
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -120,7 +101,7 @@ const Login = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="ejemplo@imedilab.com"
+                  placeholder="admin@imedilab.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -158,28 +139,15 @@ const Login = () => {
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    {isSignUp ? "Registrando..." : "Ingresando..."}
+                    Ingresando...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    {isSignUp ? <UserPlus className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-                    {isSignUp ? "Crear Cuenta" : "Ingresar"}
+                    <LogIn className="h-4 w-4" />
+                    Ingresar
                   </span>
                 )}
               </Button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignUp(!isSignUp);
-                    setError(null);
-                  }}
-                  className="text-sm text-primary hover:underline"
-                >
-                  {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate"}
-                </button>
-              </div>
             </form>
           </CardContent>
         </Card>
