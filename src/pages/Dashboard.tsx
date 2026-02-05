@@ -1,23 +1,32 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FlaskConical, Package } from "lucide-react";
-
-const stats = [
-  {
-    title: "Total Servicios",
-    value: "24",
-    icon: FlaskConical,
-    description: "Servicios activos",
-  },
-  {
-    title: "Total Paquetes",
-    value: "12",
-    icon: Package,
-    description: "Paquetes disponibles",
-  },
-];
+import { FlaskConical, Package, Loader2 } from "lucide-react";
+import { useServicios } from "@/hooks/useServicios";
+import { usePaquetes } from "@/hooks/usePaquetes";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { data: servicios = [], isLoading: loadingServicios } = useServicios();
+  const { data: paquetes = [], isLoading: loadingPaquetes } = usePaquetes();
+
+  const stats = [
+    {
+      title: "Total Servicios",
+      value: servicios.length.toString(),
+      icon: FlaskConical,
+      description: "Servicios registrados",
+    },
+    {
+      title: "Total Paquetes",
+      value: paquetes.length.toString(),
+      icon: Package,
+      description: "Paquetes disponibles",
+    },
+  ];
+
+  const isLoading = loadingServicios || loadingPaquetes;
+
   return (
     <AdminLayout>
       <div className="animate-fade-in">
@@ -28,30 +37,36 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {stats.map((stat, index) => (
-            <Card 
-              key={stat.title} 
-              className="border-border/50 hover:shadow-md transition-shadow"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center">
-                  <stat.icon className="h-5 w-5 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-foreground">{stat.value}</div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {stats.map((stat, index) => (
+              <Card 
+                key={stat.title} 
+                className="border-border/50 hover:shadow-md transition-shadow"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <div className="h-10 w-10 rounded-lg bg-accent flex items-center justify-center">
+                    <stat.icon className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-foreground">{stat.value}</div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {stat.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="border-border/50">
@@ -59,36 +74,44 @@ const Dashboard = () => {
               <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/50 hover:bg-accent transition-colors cursor-pointer">
+              <button 
+                onClick={() => navigate("/servicios")}
+                className="flex items-center gap-3 p-3 rounded-lg bg-accent/50 hover:bg-accent transition-colors cursor-pointer w-full text-left"
+              >
                 <FlaskConical className="h-5 w-5 text-primary" />
                 <span className="font-medium">Agregar nuevo servicio</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/50 hover:bg-accent transition-colors cursor-pointer">
+              </button>
+              <button 
+                onClick={() => navigate("/paquetes")}
+                className="flex items-center gap-3 p-3 rounded-lg bg-accent/50 hover:bg-accent transition-colors cursor-pointer w-full text-left"
+              >
                 <Package className="h-5 w-5 text-primary" />
                 <span className="font-medium">Crear paquete</span>
-              </div>
+              </button>
             </CardContent>
           </Card>
 
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">Actividad Reciente</CardTitle>
+              <CardTitle className="text-lg">Resumen</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { action: "Servicio actualizado", item: "Hemograma Completo", time: "Hace 2 horas" },
-                  { action: "Paquete creado", item: "Chequeo Ejecutivo", time: "Hace 5 horas" },
-                  { action: "Servicio agregado", item: "Prueba COVID-19", time: "Ayer" },
-                ].map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                    <div>
-                      <p className="font-medium text-foreground">{activity.action}</p>
-                      <p className="text-sm text-muted-foreground">{activity.item}</p>
-                    </div>
-                    <span className="text-sm text-muted-foreground">{activity.time}</span>
-                  </div>
-                ))}
+                <div className="flex items-center justify-between py-2 border-b border-border">
+                  <p className="text-muted-foreground">Servicios activos</p>
+                  <p className="font-semibold text-foreground">{servicios.length}</p>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border">
+                  <p className="text-muted-foreground">Paquetes creados</p>
+                  <p className="font-semibold text-foreground">{paquetes.length}</p>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <p className="text-muted-foreground">Estado del sistema</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-green-600">
+                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                    Operativo
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>

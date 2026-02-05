@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { LayoutDashboard, FlaskConical, Package, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/imedilab-logo.png";
 
 const menuItems = [
@@ -23,10 +24,12 @@ const menuItems = [
 export const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
 

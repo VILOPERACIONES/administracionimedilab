@@ -14,7 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categorias: {
+        Row: {
+          created_at: string
+          id: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nombre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      paquetes: {
+        Row: {
+          categoria_id: string | null
+          created_at: string
+          id: string
+          incluye: string[] | null
+          nombre: string
+          precio: number
+          updated_at: string
+        }
+        Insert: {
+          categoria_id?: string | null
+          created_at?: string
+          id?: string
+          incluye?: string[] | null
+          nombre: string
+          precio?: number
+          updated_at?: string
+        }
+        Update: {
+          categoria_id?: string | null
+          created_at?: string
+          id?: string
+          incluye?: string[] | null
+          nombre?: string
+          precio?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paquetes_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servicios: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
