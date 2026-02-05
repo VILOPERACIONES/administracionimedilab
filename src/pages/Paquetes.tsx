@@ -24,67 +24,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Search, Package, Check, X, PlusCircle } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, Pencil, Trash2, Search, Package, Check, X, PlusCircle, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-interface Paquete {
-  id: number;
-  nombre: string;
-  categoria: string;
-  precio: number;
-  incluye: string[];
-}
-
-const categoriasIniciales = [
-  "Chequeos Generales",
-  "Cardiología",
-  "Ginecología",
-  "Pediatría",
-  "Preventivo",
-];
-
-const initialPaquetes: Paquete[] = [
-  {
-    id: 1,
-    nombre: "Chequeo Básico",
-    categoria: "Chequeos Generales",
-    precio: 850,
-    incluye: ["Hemograma Completo", "Química Sanguínea 6 elementos", "Examen General de Orina"],
-  },
-  {
-    id: 2,
-    nombre: "Chequeo Ejecutivo",
-    categoria: "Preventivo",
-    precio: 2500,
-    incluye: ["Hemograma Completo", "Química Sanguínea 35 elementos", "Perfil Tiroideo", "Electrocardiograma", "Radiografía de Tórax"],
-  },
-  {
-    id: 3,
-    nombre: "Perfil Cardiaco",
-    categoria: "Cardiología",
-    precio: 1800,
-    incluye: ["Electrocardiograma", "Enzimas Cardiacas", "Perfil de Lípidos", "BNP"],
-  },
-  {
-    id: 4,
-    nombre: "Control Prenatal",
-    categoria: "Ginecología",
-    precio: 1200,
-    incluye: ["Hemograma", "Grupo Sanguíneo y RH", "VDRL", "VIH", "Examen General de Orina"],
-  },
-];
+import { useCategorias, useCreateCategoria } from "@/hooks/useCategorias";
+import { usePaquetes, useCreatePaquete, useUpdatePaquete, useDeletePaquete } from "@/hooks/usePaquetes";
 
 const Paquetes = () => {
-  const [paquetes, setPaquetes] = useState<Paquete[]>(initialPaquetes);
-  const [categorias, setCategorias] = useState<string[]>(categoriasIniciales);
+  const { data: categorias = [], isLoading: loadingCategorias } = useCategorias();
+  const { data: paquetes = [], isLoading: loadingPaquetes } = usePaquetes();
+  const createCategoria = useCreateCategoria();
+  const createPaquete = useCreatePaquete();
+  const updatePaquete = useUpdatePaquete();
+  const deletePaquete = useDeletePaquete();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPaquete, setEditingPaquete] = useState<Paquete | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nombre: "",
-    categoria: "",
+    categoria_id: "",
     precio: "",
     incluye: [] as string[],
   });
@@ -92,34 +51,33 @@ const Paquetes = () => {
   const [newCategoria, setNewCategoria] = useState("");
   const [isAddingCategoria, setIsAddingCategoria] = useState(false);
 
-  const handleAddCategoria = () => {
-    if (newCategoria.trim() && !categorias.includes(newCategoria.trim())) {
-      setCategorias([...categorias, newCategoria.trim()]);
-      setFormData({ ...formData, categoria: newCategoria.trim() });
+  const handleAddCategoria = async () => {
+    if (newCategoria.trim()) {
+      const result = await createCategoria.mutateAsync(newCategoria.trim());
+      setFormData({ ...formData, categoria_id: result.id });
       setNewCategoria("");
       setIsAddingCategoria(false);
-      toast.success("Categoría añadida");
     }
   };
 
   const filteredPaquetes = paquetes.filter(
     (p) =>
       p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.categoria.toLowerCase().includes(searchTerm.toLowerCase())
+      (p.categoria?.nombre && p.categoria.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleOpenDialog = (paquete?: Paquete) => {
+  const handleOpenDialog = (paquete?: typeof paquetes[0]) => {
     if (paquete) {
-      setEditingPaquete(paquete);
+      setEditingId(paquete.id);
       setFormData({
         nombre: paquete.nombre,
-        categoria: paquete.categoria,
+        categoria_id: paquete.categoria_id || "",
         precio: paquete.precio.toString(),
-        incluye: [...paquete.incluye],
+        incluye: [...(paquete.incluye || [])],
       });
     } else {
-      setEditingPaquete(null);
-      setFormData({ nombre: "", categoria: "", precio: "", incluye: [] });
+      setEditingId(null);
+      setFormData({ nombre: "", categoria_id: "", precio: "", incluye: [] });
     }
     setNewItem("");
     setIsDialogOpen(true);
@@ -142,51 +100,31 @@ const Paquetes = () => {
     });
   };
 
-  const handleSave = () => {
-    if (!formData.nombre.trim()) {
-      toast.error("El nombre del paquete es requerido");
-      return;
-    }
-    if (!formData.categoria) {
-      toast.error("Selecciona una categoría");
-      return;
-    }
-    if (!formData.precio || isNaN(Number(formData.precio))) {
-      toast.error("Ingresa un precio válido");
+  const handleSave = async () => {
+    if (!formData.nombre.trim() || !formData.categoria_id || !formData.precio) {
       return;
     }
 
     const paqueteData = {
       nombre: formData.nombre,
-      categoria: formData.categoria,
+      categoria_id: formData.categoria_id || null,
       precio: Number(formData.precio),
       incluye: formData.incluye,
     };
 
-    if (editingPaquete) {
-      setPaquetes(
-        paquetes.map((p) =>
-          p.id === editingPaquete.id ? { ...p, ...paqueteData } : p
-        )
-      );
-      toast.success("Paquete actualizado correctamente");
+    if (editingId) {
+      await updatePaquete.mutateAsync({ id: editingId, ...paqueteData });
     } else {
-      const newPaquete: Paquete = {
-        id: Math.max(...paquetes.map((p) => p.id)) + 1,
-        ...paqueteData,
-      };
-      setPaquetes([...paquetes, newPaquete]);
-      toast.success("Paquete creado correctamente");
+      await createPaquete.mutateAsync(paqueteData);
     }
 
     setIsDialogOpen(false);
-    setFormData({ nombre: "", categoria: "", precio: "", incluye: [] });
-    setEditingPaquete(null);
+    setFormData({ nombre: "", categoria_id: "", precio: "", incluye: [] });
+    setEditingId(null);
   };
 
-  const handleDelete = (id: number) => {
-    setPaquetes(paquetes.filter((p) => p.id !== id));
-    toast.success("Paquete eliminado correctamente");
+  const handleDelete = async (id: string) => {
+    await deletePaquete.mutateAsync(id);
   };
 
   const formatPrice = (price: number) => {
@@ -195,6 +133,16 @@ const Paquetes = () => {
       currency: "MXN",
     }).format(price);
   };
+
+  if (loadingPaquetes || loadingCategorias) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -216,10 +164,10 @@ const Paquetes = () => {
             <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingPaquete ? "Editar Paquete" : "Nuevo Paquete"}
+                  {editingId ? "Editar Paquete" : "Nuevo Paquete"}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingPaquete
+                  {editingId
                     ? "Modifica los datos del paquete"
                     : "Crea un nuevo paquete de servicios"}
                 </DialogDescription>
@@ -241,12 +189,12 @@ const Paquetes = () => {
                     <Label>Categoría</Label>
                     <Popover open={isAddingCategoria} onOpenChange={setIsAddingCategoria}>
                       <Select
-                        value={formData.categoria}
+                        value={formData.categoria_id}
                         onValueChange={(value) => {
                           if (value === "__add_new__") {
                             setIsAddingCategoria(true);
                           } else {
-                            setFormData({ ...formData, categoria: value });
+                            setFormData({ ...formData, categoria_id: value });
                           }
                         }}
                       >
@@ -255,8 +203,8 @@ const Paquetes = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {categorias.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.nombre}
                             </SelectItem>
                           ))}
                           <SelectItem value="__add_new__" className="text-primary">
@@ -290,7 +238,12 @@ const Paquetes = () => {
                             >
                               Cancelar
                             </Button>
-                            <Button size="sm" onClick={handleAddCategoria}>
+                            <Button 
+                              size="sm" 
+                              onClick={handleAddCategoria}
+                              disabled={createCategoria.isPending}
+                            >
+                              {createCategoria.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                               Añadir
                             </Button>
                           </div>
@@ -354,8 +307,14 @@ const Paquetes = () => {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSave}>
-                  {editingPaquete ? "Guardar Cambios" : "Crear Paquete"}
+                <Button 
+                  onClick={handleSave}
+                  disabled={createPaquete.isPending || updatePaquete.isPending}
+                >
+                  {(createPaquete.isPending || updatePaquete.isPending) && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  {editingId ? "Guardar Cambios" : "Crear Paquete"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -399,7 +358,7 @@ const Paquetes = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <Badge variant="secondary" className="mb-2 text-xs">
-                        {paquete.categoria}
+                        {paquete.categoria?.nombre || "Sin categoría"}
                       </Badge>
                       <h3 className="font-semibold text-lg text-foreground">
                         {paquete.nombre}
@@ -418,6 +377,7 @@ const Paquetes = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(paquete.id)}
+                        disabled={deletePaquete.isPending}
                         className="h-8 w-8 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -432,7 +392,7 @@ const Paquetes = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Incluye:</p>
                     <ul className="space-y-1.5">
-                      {paquete.incluye.map((item, index) => (
+                      {(paquete.incluye || []).map((item, index) => (
                         <li key={index} className="flex items-start gap-2 text-sm">
                           <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                           <span className="text-foreground">{item}</span>

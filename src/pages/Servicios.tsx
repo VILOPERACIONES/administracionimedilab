@@ -7,9 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -28,78 +26,66 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Search, FlaskConical } from "lucide-react";
-import { toast } from "sonner";
-
-interface Servicio {
-  id: number;
-  nombre: string;
-  descripcion: string;
-}
-
-const initialServicios: Servicio[] = [
-  { id: 1, nombre: "Hemograma Completo", descripcion: "Análisis de sangre que mide glóbulos rojos, blancos y plaquetas." },
-  { id: 2, nombre: "Química Sanguínea", descripcion: "Evaluación de glucosa, colesterol, triglicéridos y más." },
-  { id: 3, nombre: "Examen General de Orina", descripcion: "Análisis físico, químico y microscópico de la orina." },
-  { id: 4, nombre: "Prueba de COVID-19 PCR", descripcion: "Detección molecular del virus SARS-CoV-2." },
-  { id: 5, nombre: "Perfil Tiroideo", descripcion: "Medición de hormonas T3, T4 y TSH." },
-];
+import { Plus, Pencil, Trash2, Search, FlaskConical, Loader2 } from "lucide-react";
+import { useServicios, useCreateServicio, useUpdateServicio, useDeleteServicio } from "@/hooks/useServicios";
 
 const Servicios = () => {
-  const [servicios, setServicios] = useState<Servicio[]>(initialServicios);
+  const { data: servicios = [], isLoading } = useServicios();
+  const createServicio = useCreateServicio();
+  const updateServicio = useUpdateServicio();
+  const deleteServicio = useDeleteServicio();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingServicio, setEditingServicio] = useState<Servicio | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ nombre: "", descripcion: "" });
 
   const filteredServicios = servicios.filter(
     (s) =>
       s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+      (s.descripcion && s.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleOpenDialog = (servicio?: Servicio) => {
+  const handleOpenDialog = (servicio?: { id: string; nombre: string; descripcion: string | null }) => {
     if (servicio) {
-      setEditingServicio(servicio);
-      setFormData({ nombre: servicio.nombre, descripcion: servicio.descripcion });
+      setEditingId(servicio.id);
+      setFormData({ nombre: servicio.nombre, descripcion: servicio.descripcion || "" });
     } else {
-      setEditingServicio(null);
+      setEditingId(null);
       setFormData({ nombre: "", descripcion: "" });
     }
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.nombre.trim()) {
-      toast.error("El nombre del servicio es requerido");
       return;
     }
 
-    if (editingServicio) {
-      setServicios(
-        servicios.map((s) =>
-          s.id === editingServicio.id ? { ...s, ...formData } : s
-        )
-      );
-      toast.success("Servicio actualizado correctamente");
+    if (editingId) {
+      await updateServicio.mutateAsync({ id: editingId, ...formData });
     } else {
-      const newServicio: Servicio = {
-        id: Math.max(...servicios.map((s) => s.id)) + 1,
-        ...formData,
-      };
-      setServicios([...servicios, newServicio]);
-      toast.success("Servicio creado correctamente");
+      await createServicio.mutateAsync(formData);
     }
 
     setIsDialogOpen(false);
     setFormData({ nombre: "", descripcion: "" });
-    setEditingServicio(null);
+    setEditingId(null);
   };
 
-  const handleDelete = (id: number) => {
-    setServicios(servicios.filter((s) => s.id !== id));
-    toast.success("Servicio eliminado correctamente");
+  const handleDelete = async (id: string) => {
+    await deleteServicio.mutateAsync(id);
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -121,10 +107,10 @@ const Servicios = () => {
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>
-                  {editingServicio ? "Editar Servicio" : "Nuevo Servicio"}
+                  {editingId ? "Editar Servicio" : "Nuevo Servicio"}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingServicio
+                  {editingId
                     ? "Modifica los datos del servicio"
                     : "Agrega un nuevo servicio al catálogo"}
                 </DialogDescription>
@@ -158,8 +144,14 @@ const Servicios = () => {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSave}>
-                  {editingServicio ? "Guardar Cambios" : "Crear Servicio"}
+                <Button 
+                  onClick={handleSave}
+                  disabled={createServicio.isPending || updateServicio.isPending}
+                >
+                  {(createServicio.isPending || updateServicio.isPending) && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  {editingId ? "Guardar Cambios" : "Crear Servicio"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -237,6 +229,7 @@ const Servicios = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(servicio.id)}
+                              disabled={deleteServicio.isPending}
                               className="h-8 w-8 text-muted-foreground hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
