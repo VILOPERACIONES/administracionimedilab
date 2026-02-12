@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Search, Package, Check, X, PlusCircle, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import { useCategorias, useCreateCategoria } from "@/hooks/useCategorias";
 import { usePaquetes, useCreatePaquete, useUpdatePaquete, useDeletePaquete } from "@/hooks/usePaquetes";
 
@@ -187,69 +187,74 @@ const Paquetes = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Categoría</Label>
-                    <Popover open={isAddingCategoria} onOpenChange={setIsAddingCategoria}>
-                      <Select
-                        value={formData.categoria_id}
-                        onValueChange={(value) => {
-                          if (value === "__add_new__") {
-                            setIsAddingCategoria(true);
-                          } else {
-                            setFormData({ ...formData, categoria_id: value });
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categorias.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.nombre}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="__add_new__" className="text-primary">
-                            <div className="flex items-center gap-2">
-                              <PlusCircle className="h-4 w-4" />
-                              Añadir nueva categoría
-                            </div>
+                    <Select
+                      value={formData.categoria_id}
+                      onValueChange={(value) => {
+                        if (value === "__add_new__") {
+                          setIsAddingCategoria(true);
+                        } else {
+                          setFormData({ ...formData, categoria_id: value });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categorias.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.nombre}
                           </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <PopoverTrigger asChild>
-                        <span className="hidden" />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80" align="start">
-                        <div className="space-y-3">
-                          <Label>Nueva Categoría</Label>
+                        ))}
+                        <SelectItem value="__add_new__" className="text-primary">
+                          <div className="flex items-center gap-2">
+                            <PlusCircle className="h-4 w-4" />
+                            Añadir nueva categoría
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Dialog open={isAddingCategoria} onOpenChange={(open) => {
+                      setIsAddingCategoria(open);
+                      if (!open) setNewCategoria("");
+                    }}>
+                      <DialogContent className="sm:max-w-[400px]">
+                        <DialogHeader>
+                          <DialogTitle>Nueva Categoría</DialogTitle>
+                          <DialogDescription>
+                            Añade una nueva categoría para los paquetes
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-3 py-2">
+                          <Label>Nombre de la categoría</Label>
                           <Input
-                            placeholder="Nombre de la categoría"
+                            placeholder="Ej: Laboratorio"
                             value={newCategoria}
                             onChange={(e) => setNewCategoria(e.target.value)}
-                            onKeyPress={(e) => e.key === "Enter" && handleAddCategoria()}
+                            onKeyDown={(e) => e.key === "Enter" && handleAddCategoria()}
+                            autoFocus
                           />
-                          <div className="flex gap-2 justify-end">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setIsAddingCategoria(false);
-                                setNewCategoria("");
-                              }}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={handleAddCategoria}
-                              disabled={createCategoria.isPending}
-                            >
-                              {createCategoria.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                              Añadir
-                            </Button>
-                          </div>
                         </div>
-                      </PopoverContent>
-                    </Popover>
+                        <DialogFooter>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setIsAddingCategoria(false);
+                              setNewCategoria("");
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            onClick={handleAddCategoria}
+                            disabled={createCategoria.isPending || !newCategoria.trim()}
+                          >
+                            {createCategoria.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            Añadir
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="precio">Precio (MXN)</Label>
