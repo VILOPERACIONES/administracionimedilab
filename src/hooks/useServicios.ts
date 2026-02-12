@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const servicioInputSchema = z.object({
+  nombre: z.string().trim().min(1, "El nombre es requerido").max(200, "Máximo 200 caracteres"),
+  descripcion: z.string().trim().max(1000, "Máximo 1000 caracteres"),
+});
 
 export interface Servicio {
   id: string;
@@ -35,9 +41,10 @@ export const useCreateServicio = () => {
 
   return useMutation({
     mutationFn: async (servicio: ServicioInput) => {
+      const validated = servicioInputSchema.parse(servicio) as ServicioInput;
       const { data, error } = await supabase
         .from("servicios")
-        .insert([servicio])
+        .insert([validated])
         .select()
         .single();
       
@@ -59,9 +66,10 @@ export const useUpdateServicio = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...servicio }: ServicioInput & { id: string }) => {
+      const validated = servicioInputSchema.parse(servicio) as ServicioInput;
       const { data, error } = await supabase
         .from("servicios")
-        .update(servicio)
+        .update(validated)
         .eq("id", id)
         .select()
         .single();

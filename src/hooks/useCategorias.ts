@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const categoriaInputSchema = z.string().trim().min(1, "El nombre es requerido").max(200, "Máximo 200 caracteres");
 
 export interface Categoria {
   id: string;
@@ -29,6 +32,7 @@ export const useCreateCategoria = () => {
 
   return useMutation({
     mutationFn: async (nombre: string) => {
+      const validated = categoriaInputSchema.parse(nombre);
       const { data, error } = await supabase
         .from("categorias")
         .insert([{ nombre }])
