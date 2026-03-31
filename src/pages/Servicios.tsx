@@ -38,7 +38,7 @@ const Servicios = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ nombre: "", descripcion: "" });
+  const [formData, setFormData] = useState({ nombre: "", descripcion: "", precio: null as number | null });
 
   const filteredServicios = servicios.filter(
     (s) =>
@@ -46,13 +46,13 @@ const Servicios = () => {
       (s.descripcion && s.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleOpenDialog = (servicio?: { id: string; nombre: string; descripcion: string | null }) => {
+  const handleOpenDialog = (servicio?: { id: string; nombre: string; descripcion: string | null; precio: number | null }) => {
     if (servicio) {
       setEditingId(servicio.id);
-      setFormData({ nombre: servicio.nombre, descripcion: servicio.descripcion || "" });
+      setFormData({ nombre: servicio.nombre, descripcion: servicio.descripcion || "", precio: servicio.precio });
     } else {
       setEditingId(null);
-      setFormData({ nombre: "", descripcion: "" });
+      setFormData({ nombre: "", descripcion: "", precio: null });
     }
     setIsDialogOpen(true);
   };
@@ -69,7 +69,7 @@ const Servicios = () => {
     }
 
     setIsDialogOpen(false);
-    setFormData({ nombre: "", descripcion: "" });
+    setFormData({ nombre: "", descripcion: "", precio: null });
     setEditingId(null);
   };
 
@@ -139,6 +139,20 @@ const Servicios = () => {
                     rows={4}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="precio">Precio</Label>
+                  <Input
+                    id="precio"
+                    type="number"
+                    placeholder="Ej: 150.00"
+                    value={formData.precio ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, precio: e.target.value ? Number(e.target.value) : null })
+                    }
+                    min={0}
+                    step={0.01}
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -180,19 +194,22 @@ const Servicios = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Servicio</TableHead>
-                    <TableHead className="font-semibold hidden sm:table-cell">
-                      Descripción
-                    </TableHead>
-                    <TableHead className="font-semibold text-right w-[100px]">
-                      Acciones
-                    </TableHead>
+                     <TableHead className="font-semibold">Servicio</TableHead>
+                     <TableHead className="font-semibold hidden sm:table-cell">
+                       Descripción
+                     </TableHead>
+                     <TableHead className="font-semibold hidden sm:table-cell text-right">
+                       Precio
+                     </TableHead>
+                     <TableHead className="font-semibold text-right w-[100px]">
+                       Acciones
+                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredServicios.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-8">
+                      <TableCell colSpan={4} className="text-center py-8">
                         <FlaskConical className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
                         <p className="text-muted-foreground">
                           No se encontraron servicios
@@ -214,6 +231,9 @@ const Servicios = () => {
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground">
                           {servicio.descripcion}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-right text-foreground font-medium">
+                          {servicio.precio != null ? `$${servicio.precio.toFixed(2)}` : "—"}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
