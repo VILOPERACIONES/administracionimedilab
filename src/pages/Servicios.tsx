@@ -46,13 +46,13 @@ const Servicios = () => {
       (s.descripcion && s.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleOpenDialog = (servicio?: { id: string; nombre: string; descripcion: string | null }) => {
+  const handleOpenDialog = (servicio?: { id: string; nombre: string; descripcion: string | null; precio: number | null }) => {
     if (servicio) {
       setEditingId(servicio.id);
-      setFormData({ nombre: servicio.nombre, descripcion: servicio.descripcion || "" });
+      setFormData({ nombre: servicio.nombre, descripcion: servicio.descripcion || "", precio: servicio.precio });
     } else {
       setEditingId(null);
-      setFormData({ nombre: "", descripcion: "" });
+      setFormData({ nombre: "", descripcion: "", precio: null });
     }
     setIsDialogOpen(true);
   };
