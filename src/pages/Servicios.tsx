@@ -139,6 +139,20 @@ const Servicios = () => {
                     rows={4}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="precio">Precio</Label>
+                  <Input
+                    id="precio"
+                    type="number"
+                    placeholder="Ej: 150.00"
+                    value={formData.precio ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, precio: e.target.value ? Number(e.target.value) : null })
+                    }
+                    min={0}
+                    step={0.01}
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
