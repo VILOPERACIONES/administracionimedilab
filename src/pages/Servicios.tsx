@@ -194,13 +194,16 @@ const Servicios = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Servicio</TableHead>
-                    <TableHead className="font-semibold hidden sm:table-cell">
-                      Descripción
-                    </TableHead>
-                    <TableHead className="font-semibold text-right w-[100px]">
-                      Acciones
-                    </TableHead>
+                     <TableHead className="font-semibold">Servicio</TableHead>
+                     <TableHead className="font-semibold hidden sm:table-cell">
+                       Descripción
+                     </TableHead>
+                     <TableHead className="font-semibold hidden sm:table-cell text-right">
+                       Precio
+                     </TableHead>
+                     <TableHead className="font-semibold text-right w-[100px]">
+                       Acciones
+                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
