@@ -232,6 +232,9 @@ const Servicios = () => {
                         <TableCell className="hidden sm:table-cell text-muted-foreground">
                           {servicio.descripcion}
                         </TableCell>
+                        <TableCell className="hidden sm:table-cell text-right text-foreground font-medium">
+                          {servicio.precio != null ? `$${servicio.precio.toFixed(2)}` : "—"}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Button
