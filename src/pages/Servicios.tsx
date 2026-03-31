@@ -38,7 +38,7 @@ const Servicios = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ nombre: "", descripcion: "" });
+  const [formData, setFormData] = useState({ nombre: "", descripcion: "", precio: null as number | null });
 
   const filteredServicios = servicios.filter(
     (s) =>
