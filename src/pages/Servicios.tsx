@@ -69,7 +69,7 @@ const Servicios = () => {
     }
 
     setIsDialogOpen(false);
-    setFormData({ nombre: "", descripcion: "" });
+    setFormData({ nombre: "", descripcion: "", precio: null });
     setEditingId(null);
   };
 

@@ -6,12 +6,14 @@ import { z } from "zod";
 const servicioInputSchema = z.object({
   nombre: z.string().trim().min(1, "El nombre es requerido").max(200, "Máximo 200 caracteres"),
   descripcion: z.string().trim().max(1000, "Máximo 1000 caracteres"),
+  precio: z.number().min(0, "El precio debe ser mayor o igual a 0").nullable(),
 });
 
 export interface Servicio {
   id: string;
   nombre: string;
   descripcion: string | null;
+  precio: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +21,7 @@ export interface Servicio {
 export interface ServicioInput {
   nombre: string;
   descripcion: string;
+  precio: number | null;
 }
 
 export const useServicios = () => {
