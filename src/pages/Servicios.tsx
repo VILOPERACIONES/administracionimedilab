@@ -209,7 +209,7 @@ const Servicios = () => {
                 <TableBody>
                   {filteredServicios.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-8">
+                      <TableCell colSpan={4} className="text-center py-8">
                         <FlaskConical className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
                         <p className="text-muted-foreground">
                           No se encontraron servicios
